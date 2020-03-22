@@ -5,22 +5,23 @@ const d3Composite = require("d3-composite-projections");
 import { latLongCommunities } from "./communities";
 import { initial, final, ResultEntry } from "./stats";
 
-
-const calculateRadiusBasedOnAffectedCases = (comunidad: string, data: ResultEntry[]) => {
+const calculateRadiusBasedOnAffectedCases = (
+  comunidad: string,
+  data: ResultEntry[]
+) => {
   const entry = data.find(item => item.name === comunidad);
-  const maxAffected = 10000/*data.reduce(
+  const maxAffected = 10000; /*data.reduce(
     (max, item) => (item.value > max ? item.value : max),
     0
   );*/
 
   const affectedRadiusScale = d3
-  .scaleLinear()
-  .domain([0, maxAffected])
-  .range([0, 50]); // 50 pixel max radius, we could calculate it relative to width and height
-  
+    .scaleLinear()
+    .domain([0, maxAffected])
+    .range([0, 50]); // 50 pixel max radius, we could calculate it relative to width and height
+
   return entry ? affectedRadiusScale(entry.value) : 0;
 };
-
 
 const svg = d3
   .select("body")
@@ -51,37 +52,37 @@ svg
 svg
   .selectAll("circle")
   .data(latLongCommunities)
-  
+
   .enter()
   .append("circle")
   .attr("class", "affected-marker")
   .attr("r", d => calculateRadiusBasedOnAffectedCases(d.name, initial))
   .attr("cx", d => aProjection([d.long, d.lat])[0])
-  .attr("cy", d => aProjection([d.long, d.lat])[1])
-  
-  /*.merge(svg as any)
+  .attr("cy", d => aProjection([d.long, d.lat])[1]);
+
+/*.merge(svg as any)
   .transition()
   .duration(500)
   .attr("r", d => calculateRadiusBasedOnAffectedCases(d.name, final))*/
-  ;
-
 
 const updateCircles = (data: ResultEntry[]) => {
-  svg.selectAll("circle")
-  .data(latLongCommunities)
-  .attr("r", d => calculateRadiusBasedOnAffectedCases(d.name, data))
-  .attr("cx", d => aProjection([d.long, d.lat])[0])
-  .attr("cy", d => aProjection([d.long, d.lat])[1]);
+  const circles = svg.selectAll("circle");
+  circles
+    .data(latLongCommunities)
+    .merge(circles as any)
+    .transition()
+    .duration(500)
+    .attr("r", d => calculateRadiusBasedOnAffectedCases(d.name, data));
 };
 
 document
-.getElementById("initial")
-.addEventListener("click", function handleResultsInitial() {
-  updateCircles(initial);
-});
+  .getElementById("initial")
+  .addEventListener("click", function handleResultsInitial() {
+    updateCircles(initial);
+  });
 
 document
-.getElementById("final")
-.addEventListener("click", function handleResultsFinal() {
-  updateCircles(final);
-});
+  .getElementById("final")
+  .addEventListener("click", function handleResultsFinal() {
+    updateCircles(final);
+  });
